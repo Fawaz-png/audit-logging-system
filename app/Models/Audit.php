@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Audit extends Model
 {
     //
-     use HasUuid, SoftDeletes;
+    use HasUuid, SoftDeletes;
 
     protected $fillable = [
         'reference',

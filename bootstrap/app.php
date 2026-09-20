@@ -12,8 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Tells Laravel to trust all proxies (vital for cloud hosting/Codespaces)
-        $middleware->trustProxies(at: '*');
+        // Register the Inertia middleware here
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
+        ]);
     })
 
     ->withExceptions(function (Exceptions $exceptions): void {

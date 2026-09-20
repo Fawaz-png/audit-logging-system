@@ -51,11 +51,6 @@ class StoreAuditRequest extends FormRequest
                 'date',
                 'after_or_equal:start_date',
             ],
-
-            'status' => [
-                'required',
-                'in:PLANNED,IN_PROGRESS,COMPLETED',
-            ],
         ];
     }
 }
