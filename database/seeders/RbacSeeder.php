@@ -8,10 +8,6 @@ use App\Models\Role;
 
 class RbacSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-
     public function run(): void
     {
         $permissions = [
@@ -20,12 +16,12 @@ class RbacSeeder extends Seeder
                 'slug' => 'audit.create',
             ],
             [
-                'name' => 'Assign Auditors',
-                'slug' => 'audit.assign',
-            ],
-            [
                 'name' => 'View Audit',
                 'slug' => 'audit.view',
+            ],
+            [
+                'name' => 'Update Audit',
+                'slug' => 'audit.update',
             ],
             [
                 'name' => 'Create Finding',
@@ -61,8 +57,6 @@ class RbacSeeder extends Seeder
             ],
         ];
 
-        
-
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(
                 ['slug' => $permission['slug']],
@@ -87,16 +81,18 @@ class RbacSeeder extends Seeder
 
         $permissionsBySlug = Permission::all()->keyBy('slug');
 
-        Role::where('slug', 'system-administrator')->first()
+        Role::where('slug', 'system-administrator')
+            ->first()
             ->permissions()
             ->sync($permissionsBySlug->values());
 
-        Role::where('slug', 'head-of-is-audit')->first()
+        Role::where('slug', 'head-of-is-audit')
+            ->first()
             ->permissions()
             ->sync([
                 $permissionsBySlug['audit.create'],
-                $permissionsBySlug['audit.assign'],
                 $permissionsBySlug['audit.view'],
+                $permissionsBySlug['audit.update'],
                 $permissionsBySlug['finding.create'],
                 $permissionsBySlug['finding.update'],
                 $permissionsBySlug['finding.verify'],
@@ -104,17 +100,20 @@ class RbacSeeder extends Seeder
                 $permissionsBySlug['audit-log.view'],
             ]);
 
-        Role::where('slug', 'lead-auditor')->first()
+        Role::where('slug', 'lead-auditor')
+            ->first()
             ->permissions()
             ->sync([
+                $permissionsBySlug['audit.create'],
                 $permissionsBySlug['audit.view'],
-                $permissionsBySlug['audit.assign'],
+                $permissionsBySlug['audit.update'],
                 $permissionsBySlug['finding.create'],
                 $permissionsBySlug['finding.update'],
                 $permissionsBySlug['finding.verify'],
             ]);
 
-        Role::where('slug', 'supporting-auditor')->first()
+        Role::where('slug', 'supporting-auditor')
+            ->first()
             ->permissions()
             ->sync([
                 $permissionsBySlug['audit.view'],
@@ -122,7 +121,8 @@ class RbacSeeder extends Seeder
                 $permissionsBySlug['finding.update'],
             ]);
 
-        Role::where('slug', 'auditee')->first()
+        Role::where('slug', 'auditee')
+            ->first()
             ->permissions()
             ->sync([
                 $permissionsBySlug['audit.view'],

@@ -32,15 +32,21 @@ Route::middleware('auth')->group(function () {
         return inertia('Dashboard');
     })->name('dashboard');
 
+    Route::get('/audits', [AuditController::class, 'index'])
+        ->name('audits.index');
+
     Route::get('/audits/create', [AuditController::class, 'create'])
         ->name('audits.create');
 
     Route::post('/audits', [AuditController::class, 'store'])
         ->name('audits.store');
 
+    Route::get('/audits/{audit}/edit', [AuditController::class, 'edit'])
+        ->name('audits.edit');
+
+    Route::put('/audits/{audit}', [AuditController::class, 'update'])
+        ->name('audits.update');
+
     Route::get('/audits/{audit}', [AuditController::class, 'show'])
         ->name('audits.show');
-
-    // Secure the audit logging endpoint
-    Route::post('/audits', [AuditController::class, 'store'])->name('audits.store');
 });

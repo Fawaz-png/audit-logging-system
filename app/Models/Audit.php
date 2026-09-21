@@ -19,6 +19,11 @@ class Audit extends Model
         'title',
         'objective',
         'scope',
+        'department_id',
+        'audit_mode',
+        'location',
+        'methodology',
+        'previous_audit_reference',
         'start_date',
         'end_date',
         'status',
@@ -36,6 +41,11 @@ class Audit extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     public function auditors(): BelongsToMany

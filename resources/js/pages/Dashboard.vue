@@ -23,9 +23,19 @@ const page = usePage();
                 Create Audit
             </Link>
 
-            <Link :href="route('logout')" method="post" as="button" class="mt-6 rounded bg-black px-4 py-2 text-white">
-                Logout
-            </Link>
+
+            <p>
+                <Link :href="route('logout')" method="post" as="button"
+                    class="mt-6 rounded bg-black px-4 py-2 text-white">
+                    Logout
+                </Link>
+            </p>
+
+            <p>
+                <Link :href="route('audits.index')" as="button" class="mt-6 rounded bg-black px-4 py-2 text-white">
+                    View Audits
+                </Link>
+            </p>
         </div>
     </div>
 </template>
