@@ -9,17 +9,19 @@ use App\Models\Department;
 use App\Models\User;
 use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AuditController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->authorize('viewAny', Audit::class);
 
         return Inertia::render('Audits/Index', [
             'audits' => Audit::query()
+                ->visibleTo($request->user())
                 ->with([
                     'department',
                     'creator',
@@ -80,6 +82,7 @@ class AuditController extends Controller
                 'creator',
                 'department',
                 'auditors',
+                'findings',
             ]),
         ]);
     }

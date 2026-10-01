@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Department;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -36,10 +38,43 @@ class UserFactory extends Factory
     /**
      * Indicate that the model's email address should be unverified.
      */
+    public function active(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'active' => true,
+        ]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'active' => false,
+        ]);
+    }
+
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    public function forRole(string $slug): static
+    {
+        $role = Role::query()->firstOrCreate(
+            ['slug' => $slug],
+            ['name' => Str::headline($slug)]
+        );
+
+        return $this->state(fn (array $attributes) => [
+            'role_id' => $role->id,
+        ]);
+    }
+
+    public function inDepartment(Department $department): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'department_id' => $department->id,
         ]);
     }
 }

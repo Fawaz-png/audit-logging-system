@@ -4,17 +4,25 @@ namespace App\Policies;
 
 use App\Models\Audit;
 use App\Models\User;
+use Illuminate\Auth\Access\Response;
 
 class AuditPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('audit.view');
+        return $user->canViewAuditPortfolio();
     }
 
-    public function view(User $user, Audit $audit): bool
+    public function view(User $user, Audit $audit): Response
     {
-        return $user->hasPermission('audit.view');
+        $isVisible = Audit::query()
+            ->visibleTo($user)
+            ->whereKey($audit->getKey())
+            ->exists();
+
+        return $isVisible
+            ? Response::allow()
+            : Response::denyAsNotFound();
     }
 
     public function create(User $user): bool

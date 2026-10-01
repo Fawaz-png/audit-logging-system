@@ -6,4 +6,357 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+    --color-forest-950: #102a24;
+    --color-forest-900: #16372e;
+    --color-forest-800: #204b3d;
+    --color-forest-700: #315d47;
+    --color-forest-100: #e6eee5;
+    --color-moss-100: #edf2e7;
+    --color-clay-500: #d17b4c;
+    --color-paper: #f4f6f1;
+    --color-ink: #17231e;
+    --color-muted: #64716a;
+}
+
+html {
+    background: #f4f6f1;
+}
+
+body {
+    color: #263830;
+    font-family: 'Instrument Sans', 'Aptos', ui-sans-serif, system-ui, sans-serif;
+    text-rendering: optimizeLegibility;
+}
+
+.app-main {
+    background:
+        radial-gradient(ellipse at 90% 0%, rgb(201 223 183 / 17%), transparent 31%),
+        #f4f6f1;
+    color: #263830;
+}
+
+.app-main :is(input:not([type='checkbox']), select, textarea) {
+    min-height: 44px;
+    border: 1px solid #cbd5cc;
+    border-color: #cbd5cc;
+    border-radius: 5px;
+    background-color: #fffefb;
+    padding: 10px 12px;
+    color: #17231e;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+    transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.app-main :is(input:not([type='checkbox']), select, textarea):focus {
+    border-color: #3d7057;
+    outline: none;
+    box-shadow: 0 0 0 3px rgb(61 112 87 / 16%);
+}
+
+.app-main :is(input:not([type='checkbox']), select, textarea):hover:not(:focus):not(:disabled) {
+    border-color: #aab9ad;
+}
+
+.app-main textarea {
+    min-height: 104px;
+    resize: vertical;
+}
+
+.app-main select[multiple] {
+    min-height: 132px;
+    padding: 6px 8px;
+}
+
+.app-main :is(input, select, textarea):disabled,
+.app-main :is(input, select, textarea)[readonly] {
+    border-color: #dce3db;
+    background-color: #f0f3ed;
+    color: #718078;
+    cursor: not-allowed;
+}
+
+.app-main :is(input, select, textarea).border-red-400,
+.app-main :is(input, select, textarea)[aria-invalid='true'] {
+    border-color: #c46a50;
+}
+
+.app-main :is(input, select, textarea).border-red-400:focus,
+.app-main :is(input, select, textarea)[aria-invalid='true']:focus {
+    border-color: #b65e42;
+    box-shadow: 0 0 0 3px rgb(182 94 66 / 15%);
+}
+
+.app-main form :is(input:not([type='checkbox']), select, textarea):has(+ p.text-red-600),
+.app-main form :is(input:not([type='checkbox']), select, textarea)[aria-invalid='true'] {
+    border-color: #c46a50;
+}
+
+.app-main form :is(input:not([type='checkbox']), select, textarea):has(+ p.text-red-600):focus {
+    border-color: #b65e42;
+    box-shadow: 0 0 0 3px rgb(182 94 66 / 15%);
+}
+
+.app-main form label:not(.audit-member-option) {
+    color: #34483e;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.app-main form p.text-red-600 {
+    color: #a84f3b;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.app-main input[type='checkbox'] {
+    accent-color: #2a5a45;
+}
+
+.app-main :is(button, a).bg-black,
+.app-main :is(button, a).bg-slate-900,
+.app-main :is(button, a).bg-gray-900 {
+    border-color: #183d30;
+    background-color: #183d30;
+    color: #fff;
+}
+
+.app-main :is(button, a).bg-black:hover,
+.app-main :is(button, a).bg-slate-900:hover,
+.app-main :is(button, a).bg-gray-900:hover {
+    background-color: #24553f;
+}
+
+.app-main .bg-blue-600 {
+    background-color: #315d47;
+}
+
+.app-main .bg-blue-600:hover {
+    background-color: #204b3d;
+}
+
+.app-main button[type='submit'] {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-color: #183d30;
+    border-radius: 5px;
+    background-color: #183d30;
+    padding: 8px 14px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    transition: background-color 140ms ease, transform 140ms ease;
+}
+
+.app-main button[type='submit']:hover:not(:disabled) {
+    background-color: #24553f;
+    transform: translateY(-1px);
+}
+
+.app-main button[type='submit']:disabled {
+    cursor: wait;
+    opacity: 0.55;
+}
+
+.app-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px solid #dce3db;
+    padding-top: 12px;
+}
+
+.app-form-actions > :is(a, button),
+.app-action-primary,
+.app-action-secondary {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    padding: 8px 13px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.app-form-actions > .app-action-primary,
+.app-action-primary {
+    border-color: #183d30;
+    background: #183d30;
+    color: #fff;
+}
+
+.app-form-actions > .app-action-primary:hover:not(:disabled),
+.app-action-primary:hover:not(:disabled) {
+    background: #24553f;
+    color: #fff;
+}
+
+.app-form-actions > .app-action-secondary,
+.app-action-secondary {
+    border-color: #cbd5cc;
+    background: #fffefb;
+    color: #315d47;
+}
+
+.app-form-actions > .app-action-secondary:hover,
+.app-action-secondary:hover {
+    border-color: #91a996;
+    background: #edf2e7;
+    color: #173d2e;
+}
+
+@media (max-width: 639px) {
+    .app-form-actions > :is(a, button) {
+        min-height: 44px;
+    }
+}
+
+.app-main h1 {
+    color: #17231e;
+    font-family: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+    font-weight: 500;
+}
+
+.app-main .app-page-title {
+    color: #17231e;
+    font-family: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+    font-weight: 500;
+}
+
+.app-main h2,
+.app-main h3 {
+    color: #20382e;
+}
+
+.app-main label {
+    color: #34483e;
+}
+
+.app-main [class~='rounded-lg'][class~='bg-white'],
+.app-main [class~='rounded-xl'][class~='bg-white'] {
+    border: 1px solid #dce3db;
+    border-color: #dce3db;
+    box-shadow: 0 8px 22px rgb(16 42 36 / 4%);
+}
+
+.app-main table {
+    border-color: #dce3db;
+}
+
+.app-main thead {
+    background-color: #edf2e7;
+}
+
+.app-main tbody tr:hover {
+    background-color: #f7f9f4;
+}
+
+.app-main :is(.bg-gray-50, .bg-slate-50) {
+    background-color: #f3f6f0;
+}
+
+.app-main .bg-white {
+    background-color: #fffefb;
+}
+
+.app-main .border-gray-200,
+.app-main .border-slate-200 {
+    border-color: #dce3db;
+}
+
+.app-main .text-gray-900,
+.app-main .text-slate-900 {
+    color: #17231e;
+}
+
+.app-main .text-gray-600,
+.app-main .text-gray-500,
+.app-main .text-slate-600,
+.app-main .text-slate-500 {
+    color: #64716a;
+}
+
+.app-main .font-display {
+    font-family: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+}
+
+.app-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #315d47;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.app-back-link:hover {
+    color: #173d2e;
+}
+
+.app-section-kicker {
+    color: #718078;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+}
+
+.audit-form > section {
+    counter-increment: audit-section;
+    border: 1px solid #dce3db;
+    border-radius: 6px;
+    background: #fffefb;
+    padding: 20px;
+}
+
+.audit-form > section > h2 {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    border-bottom: 1px solid #e5eae3;
+    padding-bottom: 12px;
+    font-size: 16px;
+    font-weight: 650;
+}
+
+.audit-form > section > h2::before {
+    display: grid;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    background: #edf2e7;
+    color: #315d47;
+    content: counter(audit-section, decimal-leading-zero);
+    font-size: 9px;
+    font-variant-numeric: tabular-nums;
+}
+
+.audit-form {
+    counter-reset: audit-section;
+}
+
+@media (min-width: 640px) {
+    .audit-form > section {
+        padding: 26px;
+    }
+}
+
+@media (max-width: 639px) {
+    .app-main {
+        background: #f4f6f1;
+    }
 }

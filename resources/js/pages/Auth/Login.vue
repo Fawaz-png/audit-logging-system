@@ -1,5 +1,8 @@
 <script setup>
-import { Head, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Link, useForm, usePage } from '@inertiajs/vue3';
+import AuthLayout from '../../layouts/AuthLayout.vue';
+
 
 const form = useForm({
     email: '',
@@ -7,22 +10,25 @@ const form = useForm({
     remember: false,
 });
 
+const page = usePage();
+const successMessage = computed(() => page.props.flash?.success);
+
 const submit = () => {
-    form.post(route('login.store'));
+    form.post('/login');
 };
 </script>
 
 <template>
 
-    <Head title="Login" />
+    <AuthLayout title="Welcome back" description="Sign in to access your audit workspace." eyebrow="IS AUDIT / SECURE ACCESS">
 
-    <div class="min-h-screen flex items-center justify-center bg-gray-100">
-        <div class="w-full max-w-md rounded-lg bg-white p-8 shadow">
-            <h1 class="text-2xl font-semibold mb-6">
-                Audit Logging System
-            </h1>
+            <div v-if="successMessage" class="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3">
+                <p class="text-sm font-medium text-green-800">
+                    {{ successMessage }}
+                </p>
+            </div>
 
-            <form @submit.prevent="submit" class="space-y-5">
+            <form @submit.prevent="submit">
                 <div>
                     <label for="email" class="block mb-1">
                         Email
@@ -45,7 +51,7 @@ const submit = () => {
                         class="w-full rounded border px-3 py-2" />
                 </div>
 
-                <label class="flex items-center gap-2">
+                <label class="auth-remember">
                     <input v-model="form.remember" type="checkbox" />
 
                     <span>Remember me</span>
@@ -55,7 +61,10 @@ const submit = () => {
                     class="w-full rounded bg-black px-4 py-2 text-white disabled:opacity-50">
                     {{ form.processing ? 'Signing in...' : 'Sign in' }}
                 </button>
+
+                <Link :href="route('password.request')" class="text-sm font-medium text-gray-700 hover:text-gray-900">
+                    Forgot your password?
+                </Link>
             </form>
-        </div>
-    </div>
+    </AuthLayout>
 </template>

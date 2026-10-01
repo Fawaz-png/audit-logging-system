@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-
 
 class LoginController extends Controller
 {
@@ -19,12 +18,16 @@ class LoginController extends Controller
         return Inertia::render('Auth/Login');
     }
 
+    /*
+
     public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
+
+        $credentials['active'] = true;
 
         if (!Auth::attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
@@ -37,8 +40,11 @@ class LoginController extends Controller
         return redirect()->intended(route('dashboard'));
     }
 
+    */
+
     public function destroy(Request $request): RedirectResponse
     {
+        Inertia::clearHistory();
         Auth::logout();
 
         $request->session()->invalidate();

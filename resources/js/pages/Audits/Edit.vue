@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import AuthenticatedLayout from '../../layouts/AuthenticatedLayout.vue';
 
 const props = defineProps({
     audit: {
@@ -62,21 +63,34 @@ const form = useForm({
 
 const leadAuditors = computed(() => {
     return props.users.filter(
-        user => user.role?.slug === 'lead-auditor'
+        user => user.role?.slug === 'auditor'
     );
 });
 
 const supportingAuditorUsers = computed(() => {
     return props.users.filter(
-        user => user.role?.slug === 'supporting-auditor'
+        user => user.role?.slug === 'auditor'
+            && Number(user.id) !== Number(form.lead_auditor_id)
     );
 });
 
 const auditeeUsers = computed(() => {
     return props.users.filter(
         user => user.role?.slug === 'auditee'
+            && Number(user.id) !== Number(form.lead_auditor_id)
+            && !form.supporting_auditor_ids.some(id => Number(id) === Number(user.id))
     );
 });
+
+const normalizeTeamAssignments = () => {
+    form.supporting_auditor_ids = form.supporting_auditor_ids.filter(
+        id => Number(id) !== Number(form.lead_auditor_id)
+    );
+    form.auditee_ids = form.auditee_ids.filter(id => {
+        return Number(id) !== Number(form.lead_auditor_id)
+            && !form.supporting_auditor_ids.some(supportingId => Number(supportingId) === Number(id));
+    });
+};
 
 const submit = () => {
     form.put(route('audits.update', { audit: props.audit.id }));
@@ -87,24 +101,28 @@ const submit = () => {
 
     <Head :title="`Edit ${audit.title}`" />
 
-    <div class="min-h-screen bg-gray-100 p-8">
-        <div class="mx-auto max-w-4xl">
+    <AuthenticatedLayout>
+        <template #header>
+            Edit Audit
+        </template>
 
-            <div class="mb-6">
-                <Link :href="route('audits.show', { audit: audit.id })" class="text-sm text-gray-600 hover:text-black">
-                    ← Back to Audit
+        <div class="max-w-5xl space-y-6">
+
+            <div>
+                    <Link :href="route('audits.show', { audit: audit.id })" class="app-back-link">
+                        <span aria-hidden="true">←</span> Back to audit
                 </Link>
 
-                <h1 class="mt-3 text-3xl font-semibold">
+                <h2 class="app-page-title mt-3 text-xl font-semibold text-gray-900">
                     Edit Audit
-                </h1>
+                </h2>
 
-                <p class="mt-1 text-gray-600">
+                <p class="mt-1 text-sm text-gray-600">
                     Update the audit context and assigned team.
                 </p>
             </div>
 
-            <form @submit.prevent="submit" class="space-y-8 rounded-lg bg-white p-8 shadow">
+            <form @submit.prevent="submit" class="audit-form space-y-5">
 
                 <!-- Reference -->
                 <section>
@@ -337,7 +355,7 @@ const submit = () => {
                                 Lead Auditor
                             </label>
 
-                            <select id="lead_auditor_id" v-model="form.lead_auditor_id"
+                            <select id="lead_auditor_id" v-model="form.lead_auditor_id" @change="normalizeTeamAssignments"
                                 class="w-full rounded border px-3 py-2">
                                 <option value="">
                                     Select lead auditor
@@ -359,7 +377,7 @@ const submit = () => {
                                 Supporting Auditors
                             </label>
 
-                            <select id="supporting_auditor_ids" v-model="form.supporting_auditor_ids" multiple
+                            <select id="supporting_auditor_ids" v-model="form.supporting_auditor_ids" multiple @change="normalizeTeamAssignments"
                                 class="min-h-32 w-full rounded border px-3 py-2">
                                 <option v-for="user in supportingAuditorUsers" :key="user.id" :value="user.id">
                                     {{ user.name }} — {{ user.email }}
@@ -382,7 +400,7 @@ const submit = () => {
                                 Auditees
                             </label>
 
-                            <select id="auditee_ids" v-model="form.auditee_ids" multiple
+                            <select id="auditee_ids" v-model="form.auditee_ids" multiple @change="normalizeTeamAssignments"
                                 class="min-h-32 w-full rounded border px-3 py-2">
                                 <option v-for="user in auditeeUsers" :key="user.id" :value="user.id">
                                     {{ user.name }} — {{ user.email }}
@@ -403,14 +421,13 @@ const submit = () => {
                 </section>
 
                 <!-- Actions -->
-                <div class="flex justify-end gap-3 border-t pt-6">
+                <div class="app-form-actions">
 
-                    <Link :href="route('audits.show', { audit: audit.id })" class="rounded border px-4 py-2">
+                    <Link :href="route('audits.show', { audit: audit.id })" class="app-action-secondary">
                         Cancel
                     </Link>
 
-                    <button type="submit" :disabled="form.processing"
-                        class="rounded bg-black px-5 py-2 text-white disabled:opacity-50">
+                    <button type="submit" :disabled="form.processing" class="app-action-primary">
                         {{
                             form.processing
                                 ? 'Saving...'
@@ -422,5 +439,5 @@ const submit = () => {
 
             </form>
         </div>
-    </div>
+    </AuthenticatedLayout>
 </template>

@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Permission;
 use App\Models\Role;
+use Illuminate\Database\Seeder;
 
 class RbacSeeder extends Seeder
 {
@@ -12,17 +12,18 @@ class RbacSeeder extends Seeder
     {
         $permissions = [
             [
-                'name' => 'Create Audit',
-                'slug' => 'audit.create',
+                'name' => 'View Audits',
+                'slug' => 'audit.view',
             ],
             [
-                'name' => 'View Audit',
-                'slug' => 'audit.view',
+                'name' => 'Create Audit',
+                'slug' => 'audit.create',
             ],
             [
                 'name' => 'Update Audit',
                 'slug' => 'audit.update',
             ],
+
             [
                 'name' => 'Create Finding',
                 'slug' => 'finding.create',
@@ -48,9 +49,15 @@ class RbacSeeder extends Seeder
                 'slug' => 'finding.close',
             ],
             [
+                'name' => 'Delete Finding',
+                'slug' => 'finding.delete',
+            ],
+
+            [
                 'name' => 'View Audit Logs',
                 'slug' => 'audit-log.view',
             ],
+
             [
                 'name' => 'Manage Users',
                 'slug' => 'user.manage',
@@ -67,8 +74,7 @@ class RbacSeeder extends Seeder
         $roles = [
             'system-administrator' => 'System Administrator',
             'head-of-is-audit' => 'Head of IS Audit',
-            'lead-auditor' => 'Lead Auditor',
-            'supporting-auditor' => 'Supporting Auditor',
+            'auditor' => 'Auditor',
             'auditee' => 'Auditee',
         ];
 
@@ -90,35 +96,31 @@ class RbacSeeder extends Seeder
             ->first()
             ->permissions()
             ->sync([
-                $permissionsBySlug['audit.create'],
                 $permissionsBySlug['audit.view'],
+                $permissionsBySlug['audit.create'],
                 $permissionsBySlug['audit.update'],
+
                 $permissionsBySlug['finding.create'],
                 $permissionsBySlug['finding.update'],
                 $permissionsBySlug['finding.verify'],
                 $permissionsBySlug['finding.close'],
+                $permissionsBySlug['finding.delete'],
+
                 $permissionsBySlug['audit-log.view'],
             ]);
 
-        Role::where('slug', 'lead-auditor')
+        Role::where('slug', 'auditor')
             ->first()
             ->permissions()
             ->sync([
-                $permissionsBySlug['audit.create'],
                 $permissionsBySlug['audit.view'],
+                $permissionsBySlug['audit.create'],
                 $permissionsBySlug['audit.update'],
+
                 $permissionsBySlug['finding.create'],
                 $permissionsBySlug['finding.update'],
                 $permissionsBySlug['finding.verify'],
-            ]);
-
-        Role::where('slug', 'supporting-auditor')
-            ->first()
-            ->permissions()
-            ->sync([
-                $permissionsBySlug['audit.view'],
-                $permissionsBySlug['finding.create'],
-                $permissionsBySlug['finding.update'],
+                $permissionsBySlug['finding.close'],
             ]);
 
         Role::where('slug', 'auditee')

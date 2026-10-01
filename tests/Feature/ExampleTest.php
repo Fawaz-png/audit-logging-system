@@ -10,10 +10,13 @@ class ExampleTest extends TestCase
     /**
      * A basic test example.
      */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_guest_visiting_root_is_redirected_to_login(): void
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        $response
+            ->assertRedirectToRoute('login')
+            ->assertHeader('Cache-Control', 'max-age=0, must-revalidate, no-cache, no-store, private')
+            ->assertHeader('Pragma', 'no-cache');
     }
 }
