@@ -24,6 +24,8 @@ class AuditLogger
         AuditLog::query()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $actor?->id,
+            'actor_name' => $actor?->name,
+            'actor_email' => $actor?->email,
             'action' => $action,
             'auditable_type' => $record::class,
             'auditable_id' => $record->getKey(),
@@ -33,5 +35,34 @@ class AuditLogger
             'user_agent' => $request?->userAgent(),
             'created_at' => now(),
         ]);
+    }
+
+    /** @param array<string, mixed> $before
+     *  @param array<string, mixed> $after
+     */
+    public function recordChanges(
+        string $action,
+        Model $record,
+        ?User $actor,
+        array $before,
+        array $after
+    ): void {
+        $fields = array_unique([...array_keys($before), ...array_keys($after)]);
+        $oldPayload = [];
+        $newPayload = [];
+
+        foreach ($fields as $field) {
+            $oldValue = $before[$field] ?? null;
+            $newValue = $after[$field] ?? null;
+
+            if ($oldValue !== $newValue) {
+                $oldPayload[$field] = $oldValue;
+                $newPayload[$field] = $newValue;
+            }
+        }
+
+        if ($oldPayload !== []) {
+            $this->record($action, $record, $actor, $oldPayload, $newPayload);
+        }
     }
 }

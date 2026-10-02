@@ -38,6 +38,13 @@ class FindingService
             $this->auditLogger->record('FINDING_REGISTERED', $finding, $user, null, [
                 'reference' => $finding->reference,
                 'audit_id' => $finding->audit_id,
+                'title' => $finding->title,
+                'description' => $finding->description,
+                'criteria' => $finding->criteria,
+                'effect' => $finding->effect,
+                'recommendation' => $finding->recommendation,
+                'process' => $finding->process,
+                'risk_rating' => $finding->risk_rating,
                 'status' => $finding->status,
             ]);
 
@@ -65,15 +72,25 @@ class FindingService
             unset($data['actions']);
             unset($data['removed_action_ids']);
 
+            $trackedFields = [
+                'reference',
+                'title',
+                'description',
+                'criteria',
+                'effect',
+                'recommendation',
+                'process',
+                'risk_rating',
+            ];
+            $before = array_intersect_key($finding->getAttributes(), array_flip($trackedFields));
+
             $finding->update([
                 ...$data,
                 'updated_by' => $user->id,
             ]);
 
-            $this->auditLogger->record('AUDITEE_RESPONSE_SUBMITTED', $finding, $user, null, [
-                'status' => $finding->status,
-                'response_at' => $finding->response_at?->toIso8601String(),
-            ]);
+            $after = array_intersect_key($finding->getAttributes(), array_flip($trackedFields));
+            $this->auditLogger->recordChanges('FINDING_UPDATED', $finding, $user, $before, $after);
 
             return $finding->fresh([
                 'audit',
@@ -85,10 +102,22 @@ class FindingService
         });
     }
 
-    public function delete(Finding $finding): void
+    public function delete(Finding $finding, User $user): void
     {
-        DB::transaction(function () use ($finding) {
+        DB::transaction(function () use ($finding, $user) {
+            $before = [
+                'reference' => $finding->reference,
+                'title' => $finding->title,
+                'status' => $finding->status,
+            ];
             $finding->delete();
+            $this->auditLogger->record(
+                'FINDING_DELETED',
+                $finding,
+                $user,
+                $before,
+                ['deleted_at' => $finding->deleted_at?->toIso8601String()]
+            );
         });
     }
 
@@ -110,12 +139,24 @@ class FindingService
                 'This finding is no longer awaiting an initial response.'
             );
 
+            $before = [
+                'status' => $finding->status,
+                'auditee_response' => $finding->auditee_response,
+            ];
+
             $finding->update([
                 'auditee_response' => $response,
                 'response_by' => $user->id,
                 'response_at' => now(),
                 'status' => Finding::STATUS_RESPONSE_RECEIVED,
                 'updated_by' => $user->id,
+            ]);
+
+            $this->auditLogger->recordChanges('AUDITEE_RESPONSE_SUBMITTED', $finding, $user, $before, [
+                'status' => $finding->status,
+                'auditee_response' => $finding->auditee_response,
+                'response_by' => $finding->response_by,
+                'response_at' => $finding->response_at?->toIso8601String(),
             ]);
 
             $this->notifier->notifyParticipants(
@@ -212,6 +253,9 @@ class FindingService
 
             $this->auditLogger->record('CORRECTIVE_ACTION_SUBMITTED', $action, $user, null, [
                 'finding_id' => $finding->id,
+                'responsible_department_id' => $action->responsible_department_id,
+                'responsible_user_id' => $action->responsible_user_id,
+                'action' => $action->action,
                 'proposed_due_date' => $action->proposed_due_date?->toDateString(),
                 'status' => $action->status,
             ]);
@@ -253,6 +297,11 @@ class FindingService
                 ]);
             }
 
+            $before = [
+                'status' => $action->status,
+                'proposed_due_date' => $action->proposed_due_date?->toDateString(),
+            ];
+
             $action->update([
                 'agreed_due_date' => $agreedDueDate,
                 'status' => FindingAction::STATUS_IN_PROGRESS,
@@ -262,11 +311,12 @@ class FindingService
                 'updated_by' => $user->id,
             ]);
 
-            $this->auditLogger->record('CORRECTIVE_ACTION_APPROVED_SLA_STARTED', $action, $user, [
-                'status' => FindingAction::STATUS_PENDING_APPROVAL,
-            ], [
+            $this->auditLogger->recordChanges('CORRECTIVE_ACTION_APPROVED_SLA_STARTED', $action, $user, $before, [
                 'status' => $action->status,
                 'agreed_due_date' => $action->agreed_due_date?->toDateString(),
+                'approved_by' => $action->approved_by,
+                'approved_at' => $action->approved_at?->toIso8601String(),
+                'approval_comment' => $action->approval_comment,
             ]);
 
             $finding->update([
@@ -306,15 +356,15 @@ class FindingService
                 ]);
             }
 
+            $before = ['status' => $action->status];
+
             $action->update([
                 'status' => FindingAction::STATUS_REJECTED,
                 'rejection_reason' => $reason,
                 'updated_by' => $user->id,
             ]);
 
-            $this->auditLogger->record('CORRECTIVE_ACTION_REJECTED', $action, $user, [
-                'status' => FindingAction::STATUS_PENDING_APPROVAL,
-            ], [
+            $this->auditLogger->recordChanges('CORRECTIVE_ACTION_REJECTED', $action, $user, $before, [
                 'status' => $action->status,
                 'reason' => $reason,
             ]);
@@ -356,6 +406,8 @@ class FindingService
                 ]);
             }
 
+            $before = ['status' => $action->status];
+
             $action->update([
                 'status' => FindingAction::STATUS_IN_PROGRESS,
                 'updated_by' => $user->id,
@@ -363,6 +415,11 @@ class FindingService
 
             $action->finding->update([
                 'status' => Finding::STATUS_REMEDIATION_IN_PROGRESS,
+                'updated_by' => $user->id,
+            ]);
+
+            $this->auditLogger->recordChanges('REMEDIATION_STARTED', $action, $user, $before, [
+                'status' => $action->status,
                 'updated_by' => $user->id,
             ]);
 
@@ -388,14 +445,19 @@ class FindingService
                 ]);
             }
 
+            $before = [
+                'status' => $action->status,
+                'agreed_due_date' => $action->agreed_due_date?->toDateString(),
+            ];
+
             $action->update([
                 'status' => FindingAction::STATUS_COMPLETED,
                 'completed_at' => now(),
                 'updated_by' => $user->id,
             ]);
 
-            $this->auditLogger->record('REMEDIATION_MARKED_COMPLETE', $action, $user, null, [
-                'finding_id' => $action->finding_id,
+            $this->auditLogger->recordChanges('REMEDIATION_MARKED_COMPLETE', $action, $user, $before, [
+                'status' => $action->status,
                 'completed_at' => $action->completed_at?->toIso8601String(),
             ]);
 
@@ -456,12 +518,21 @@ class FindingService
                 ]);
             }
 
+            $before = ['status' => $finding->status];
+
             $finding->update([
                 'status' => Finding::STATUS_VERIFIED,
                 'verified_by' => $user->id,
                 'verified_at' => now(),
                 'verification_notes' => $notes,
                 'updated_by' => $user->id,
+            ]);
+
+            $this->auditLogger->recordChanges('FINDING_VERIFIED', $finding, $user, $before, [
+                'status' => $finding->status,
+                'verified_by' => $finding->verified_by,
+                'verified_at' => $finding->verified_at?->toIso8601String(),
+                'verification_notes' => $finding->verification_notes,
             ]);
 
             return $finding->fresh([
@@ -490,11 +561,19 @@ class FindingService
                 'Only verified findings can be closed.'
             );
 
+            $before = ['status' => $finding->status];
+
             $finding->update([
                 'status' => Finding::STATUS_CLOSED,
                 'closed_by' => $user->id,
                 'closed_at' => now(),
                 'updated_by' => $user->id,
+            ]);
+
+            $this->auditLogger->recordChanges('FINDING_CLOSED', $finding, $user, $before, [
+                'status' => $finding->status,
+                'closed_by' => $finding->closed_by,
+                'closed_at' => $finding->closed_at?->toIso8601String(),
             ]);
 
             return $finding->fresh([

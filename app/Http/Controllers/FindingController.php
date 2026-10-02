@@ -80,7 +80,9 @@ class FindingController extends Controller
             return $finding;
         });
 
-        return redirect()->route('findings.show', $finding);
+        return redirect()
+            ->route('findings.show', $finding)
+            ->with('success', 'Finding registered with supporting evidence.');
     }
 
     public function index(Request $request): Response
@@ -177,11 +179,11 @@ class FindingController extends Controller
         return redirect()->route('findings.show', $finding);
     }
 
-    public function destroy(Finding $finding)
+    public function destroy(Request $request, Finding $finding)
     {
         $this->authorize('delete', $finding);
 
-        $this->findingService->delete($finding);
+        $this->findingService->delete($finding, $request->user());
 
         return redirect()->route('audits.show', $finding->audit_id);
     }

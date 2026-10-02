@@ -10,9 +10,11 @@ use Illuminate\Support\Facades\Password;
 
 class UserService
 {
-    public function provision(array $data): User
+    public function __construct(private AuditLogger $auditLogger) {}
+
+    public function provision(array $data, User $actor): User
     {
-        return DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data, $actor) {
             $user = User::create([
                 'uuid' => (string) str()->uuid(),
                 'name' => $data['name'],
@@ -29,6 +31,14 @@ class UserService
             $token = $broker->createToken($user);
 
             $user->sendAccountActivationNotification($token);
+
+            $this->auditLogger->record('USER_ACCOUNT_PROVISIONED', $user, $actor, null, [
+                'name' => $user->name,
+                'email' => $user->email,
+                'role_id' => $user->role_id,
+                'department_id' => $user->department_id,
+                'active' => $user->active,
+            ]);
 
             return $user;
         });

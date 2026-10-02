@@ -114,8 +114,9 @@ onUnmounted(() => {
 
                     <div class="dashboard-metric">
                         <span class="dashboard-metric-index">05</span>
-                        <p class="text-sm text-gray-600">Overdue SLAs</p>
+                        <p class="text-sm text-gray-600">Past-due actions</p>
                         <p class="mt-4 font-display text-4xl text-gray-900">{{ stats.overdueActions ?? 0 }}</p>
+                        <p class="mt-2 text-xs text-gray-500">Open actions with an agreed date before today.</p>
                     </div>
 
                     <div class="dashboard-metric">
@@ -145,8 +146,8 @@ onUnmounted(() => {
                     </Link>
                     <Link v-if="page.props.auth.user.permissions?.includes('audit-log.view')" :href="route('audit-logs.index')" class="dashboard-metric dashboard-metric--card">
                         <span class="dashboard-metric-index">L</span>
-                        <p class="text-sm text-gray-600">Audit logs</p>
-                        <p class="mt-4 text-base font-semibold text-gray-900">Review immutable change history</p>
+                        <p class="text-sm text-gray-600">Change history</p>
+                        <p class="mt-4 text-base font-semibold text-gray-900">Review recorded workflow events</p>
                     </Link>
                     <Link v-if="page.props.auth.user.permissions?.includes('user.manage')" :href="route('roles.index')" class="dashboard-metric dashboard-metric--card">
                         <span class="dashboard-metric-index">R</span>
@@ -182,7 +183,8 @@ onUnmounted(() => {
                     <section>
                         <div class="mb-4">
                             <p class="app-section-kicker">SLA TRACKING</p>
-                            <h2 class="mt-1 text-base font-semibold text-gray-900">Overdue actions</h2>
+                            <h2 class="mt-1 text-base font-semibold text-gray-900">Past-due actions</h2>
+                            <p class="mt-1 text-xs text-gray-500">Open actions with an agreed date before today.</p>
                         </div>
                         <div v-if="overdueActions.length" class="divide-y divide-red-100 border-y border-red-100">
                             <Link v-for="action in overdueActions" :key="action.id"

@@ -34,17 +34,17 @@ const recordReference = (log) => log.target.reference
 </script>
 
 <template>
-    <Head title="Audit Logs" />
+    <Head title="Change History" />
 
     <AuthenticatedLayout>
-        <template #header>Audit Logs</template>
+        <template #header>Change History</template>
 
         <div class="mx-auto max-w-[1500px] space-y-6">
             <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <p class="app-section-kicker">GOVERNANCE / EVIDENCE</p>
-                    <h2 class="app-page-title mt-1 text-xl font-semibold text-gray-900">Audit log</h2>
-                    <p class="mt-1 text-sm text-gray-600">Immutable record of changes made across the assurance workspace.</p>
+                    <h2 class="app-page-title mt-1 text-xl font-semibold text-gray-900">Change history</h2>
+                    <p class="mt-1 text-sm text-gray-600">Recorded administrative and workflow events across this workspace.</p>
                 </div>
                 <p class="text-sm tabular-nums text-gray-500">{{ logs.total }} events</p>
             </header>

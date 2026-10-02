@@ -70,6 +70,13 @@ class FindingEvidenceTest extends TestCase
             ->get(route('findings.evidences.download', [$finding, $evidence]))
             ->assertDownload('remediation.txt');
 
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'EVIDENCE_DOWNLOAD_AUTHORIZED',
+            'auditable_type' => FindingEvidence::class,
+            'auditable_id' => $evidence->id,
+            'user_id' => $leadAuditor->id,
+        ]);
+
         $this->actingAs($leadAuditor)
             ->post(route('findings.closure-requests.approve', $finding), [
                 'notes' => 'Evidence confirms remediation.',

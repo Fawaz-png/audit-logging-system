@@ -32,7 +32,7 @@ class UserController extends Controller
         StoreUserRequest $request,
         UserService $userService
     ): RedirectResponse {
-        $userService->provision($request->validated());
+        $userService->provision($request->validated(), $request->user());
 
         return redirect()
             ->route('users.create')

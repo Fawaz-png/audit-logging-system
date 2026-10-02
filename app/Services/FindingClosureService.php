@@ -33,6 +33,8 @@ class FindingClosureService
                     ->lockForUpdate()
                     ->findOrFail($finding->id);
 
+                $previousStatus = $lockedFinding->status;
+
                 if (! in_array($lockedFinding->status, [
                     Finding::STATUS_READY_FOR_VERIFICATION,
                     Finding::STATUS_CLOSURE_REJECTED,
@@ -65,8 +67,13 @@ class FindingClosureService
                     'updated_by' => $user->id,
                 ]);
 
-                $this->auditLogger->record('FINDING_CLOSURE_REQUESTED', $lockedFinding, $user, null, [
+                $this->auditLogger->record('FINDING_CLOSURE_REQUESTED', $lockedFinding, $user, [
+                    'status' => $previousStatus,
+                ], [
                     'status' => $lockedFinding->status,
+                    'closure_request_notes' => $lockedFinding->closure_request_notes,
+                    'closure_requested_by' => $user->id,
+                    'closure_requested_at' => $lockedFinding->closure_requested_at?->toIso8601String(),
                     'evidence_id' => $evidence->id,
                 ]);
 
@@ -107,6 +114,11 @@ class FindingClosureService
                 ]);
             }
 
+            $before = [
+                'status' => $lockedFinding->status,
+                'closure_request_notes' => $lockedFinding->closure_request_notes,
+            ];
+
             $lockedFinding->update([
                 'status' => Finding::STATUS_CLOSED,
                 'closed_by' => $user->id,
@@ -119,11 +131,13 @@ class FindingClosureService
                 'updated_by' => $user->id,
             ]);
 
-            $this->auditLogger->record('FINDING_CLOSURE_APPROVED', $lockedFinding, $user, [
-                'status' => Finding::STATUS_CLOSURE_REQUESTED,
-            ], [
+            $this->auditLogger->recordChanges('FINDING_CLOSURE_APPROVED', $lockedFinding, $user, $before, [
                 'status' => $lockedFinding->status,
+                'closure_request_notes' => $lockedFinding->closure_request_notes,
                 'closed_at' => $lockedFinding->closed_at?->toIso8601String(),
+                'closure_reviewed_by' => $user->id,
+                'closure_reviewed_at' => $lockedFinding->closure_reviewed_at?->toIso8601String(),
+                'closure_review_notes' => $lockedFinding->closure_review_notes,
             ]);
 
             $this->notifier->notifyParticipants(
@@ -146,6 +160,11 @@ class FindingClosureService
 
             $this->ensureClosureRequest($lockedFinding);
 
+            $before = [
+                'status' => $lockedFinding->status,
+                'closure_request_notes' => $lockedFinding->closure_request_notes,
+            ];
+
             $lockedFinding->update([
                 'status' => Finding::STATUS_CLOSURE_REJECTED,
                 'closure_reviewed_by' => $user->id,
@@ -156,11 +175,12 @@ class FindingClosureService
                 'updated_by' => $user->id,
             ]);
 
-            $this->auditLogger->record('FINDING_CLOSURE_REJECTED', $lockedFinding, $user, [
-                'status' => Finding::STATUS_CLOSURE_REQUESTED,
-            ], [
+            $this->auditLogger->recordChanges('FINDING_CLOSURE_REJECTED', $lockedFinding, $user, $before, [
                 'status' => $lockedFinding->status,
-                'reason' => $reason,
+                'closure_request_notes' => $lockedFinding->closure_request_notes,
+                'closure_reviewed_by' => $user->id,
+                'closure_reviewed_at' => $lockedFinding->closure_reviewed_at?->toIso8601String(),
+                'closure_rejection_reason' => $lockedFinding->closure_rejection_reason,
             ]);
 
             $this->notifier->notifyParticipants(

@@ -24,6 +24,10 @@ class ProfileController extends Controller
                     'live_notification_alerts' => true,
                 ],
             ],
+            'sessionPolicy' => [
+                'idleTimeoutMinutes' => (int) config('auth.session.idle_timeout'),
+                'absoluteTimeoutMinutes' => (int) config('auth.session.absolute_timeout'),
+            ],
         ]);
     }
 

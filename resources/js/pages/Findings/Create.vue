@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3'
+import { ref } from 'vue'
 import AuthenticatedLayout from '../../layouts/AuthenticatedLayout.vue'
 
 const props = defineProps({
@@ -21,6 +22,25 @@ const form = useForm({
     evidence_description: '',
     evidence_file: null,
 })
+const evidenceInput = ref(null)
+
+const formatFileSize = (bytes) => bytes < 1024 * 1024
+    ? `${Math.ceil(bytes / 1024)} KB`
+    : `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+
+const selectEvidenceFile = (event) => {
+    form.evidence_file = event.target.files?.[0] ?? null
+    form.clearErrors('evidence_file')
+}
+
+const clearEvidenceFile = () => {
+    form.evidence_file = null
+    form.clearErrors('evidence_file')
+
+    if (evidenceInput.value) {
+        evidenceInput.value.value = ''
+    }
+}
 
 const submit = () => {
     form.post(route('findings.store', props.audit.id), {
@@ -130,12 +150,29 @@ const submit = () => {
 
                     <div>
                         <label for="finding-evidence-file" class="block text-sm font-medium text-gray-700">Evidence file</label>
-                        <input id="finding-evidence-file" required type="file"
+                        <input id="finding-evidence-file" ref="evidenceInput" required type="file"
                             accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.csv,.txt"
                             class="mt-1 block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-gray-700 file:ring-1 file:ring-gray-300"
-                            @input="form.evidence_file = $event.target.files[0]" />
+                            @change="selectEvidenceFile" />
                         <p class="mt-1 text-xs text-gray-500">PDF, image, office document, CSV, or text file, up to 10 MB.</p>
+                        <div v-if="form.evidence_file" class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded border border-gray-200 bg-gray-50 px-3 py-2">
+                            <p class="min-w-0 break-all text-xs text-gray-700">
+                                {{ form.evidence_file.name }} · {{ formatFileSize(form.evidence_file.size) }}
+                            </p>
+                            <button type="button" :disabled="form.processing" class="text-xs font-semibold text-[#315d47] underline underline-offset-2 disabled:opacity-50" @click="clearEvidenceFile">
+                                Remove file
+                            </button>
+                        </div>
                         <p v-if="form.errors.evidence_file" class="mt-1 text-xs text-red-600">{{ form.errors.evidence_file }}</p>
+                        <div v-if="form.progress" class="mt-3 space-y-1" role="status" aria-live="polite">
+                            <div class="flex justify-between text-xs text-gray-600">
+                                <span>Uploading evidence</span>
+                                <span>{{ form.progress.percentage }}%</span>
+                            </div>
+                            <progress class="h-2 w-full accent-[#315d47]" :value="form.progress.percentage" max="100">
+                                {{ form.progress.percentage }}%
+                            </progress>
+                        </div>
                     </div>
 
                     <div>

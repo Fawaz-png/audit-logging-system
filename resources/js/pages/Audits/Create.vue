@@ -206,9 +206,9 @@ const continueStep = () => {
                     </button>
                 </nav>
 
-                <div v-if="stepError || Object.keys(form.errors).length" class="audit-error-summary" role="alert">
+                <div v-if="stepError" class="audit-error-summary" role="alert" aria-live="assertive">
                     <p class="text-sm font-semibold">Some details need your attention</p>
-                    <p class="mt-1 text-xs">{{ stepError || 'Review the highlighted fields in this section before continuing.' }}</p>
+                    <p class="mt-1 text-xs">{{ stepError }}</p>
                 </div>
 
                 <!-- Basic information -->

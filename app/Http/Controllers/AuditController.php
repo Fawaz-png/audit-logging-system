@@ -67,7 +67,7 @@ class AuditController extends Controller
         $audit = $auditService->create([
             ...$request->validated(),
             'created_by' => $request->user()->id,
-        ]);
+        ], $request->user());
 
         return redirect()
             ->route('audits.show', $audit);
@@ -129,7 +129,8 @@ class AuditController extends Controller
 
         $auditService->update(
             $audit,
-            $request->validated()
+            $request->validated(),
+            $request->user()
         );
 
         return redirect()

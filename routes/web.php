@@ -15,7 +15,9 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\SessionSecurityController;
 use App\Http\Controllers\UserController;
+use App\Http\Middleware\EnforceAuthenticatedSessionLifetime;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -60,7 +62,7 @@ Route::middleware('guest')->group(function () {
 });
 
 // Authenticated Routes
-Route::middleware(['auth', EncryptHistory::class])->group(function () {
+Route::middleware(['auth', EnforceAuthenticatedSessionLifetime::class, EncryptHistory::class])->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])
         ->name('logout');
 
@@ -73,6 +75,9 @@ Route::middleware(['auth', EncryptHistory::class])->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
+
+    Route::post('/profile/sessions/revoke-others', [SessionSecurityController::class, 'revokeOtherSessions'])
+        ->name('profile.sessions.revoke-others');
 
     Route::put('/profile', [ProfileController::class, 'update'])
         ->name('profile.update');

@@ -38,7 +38,7 @@ const label = (value) => value?.replaceAll('_', ' ').toLocaleLowerCase().replace
                 <div class="report-metric"><span>Active audits</span><strong>{{ summary.active_audits }}</strong></div>
                 <div class="report-metric"><span>Open findings</span><strong>{{ summary.open_findings }}</strong></div>
                 <div class="report-metric report-metric--risk"><span>High / critical open</span><strong>{{ summary.high_risk_findings }}</strong></div>
-                <div class="report-metric report-metric--overdue"><span>Overdue actions</span><strong>{{ summary.overdue_actions }}</strong></div>
+                <div class="report-metric report-metric--overdue"><span>Past-due actions</span><strong>{{ summary.overdue_actions }}</strong><small>Open actions with an agreed date before today.</small></div>
             </section>
 
             <section class="grid gap-8 xl:grid-cols-[1.3fr_1fr]">

@@ -114,4 +114,9 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    'session' => [
+        'idle_timeout' => (int) env('AUTH_SESSION_IDLE_TIMEOUT', 30),
+        'absolute_timeout' => (int) env('AUTH_SESSION_ABSOLUTE_TIMEOUT', 720),
+    ],
+
 ];

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,7 +26,7 @@ class ResetPasswordController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, AuditLogger $auditLogger): RedirectResponse
     {
         $credentials = $request->validate([
             'token' => ['required', 'string'],
@@ -47,11 +48,18 @@ class ResetPasswordController extends Controller
 
         $status = Password::reset(
             $credentials,
-            function ($user, $password) {
+            function ($user, $password) use ($auditLogger): void {
                 $user->forceFill([
                     'password' => Hash::make($password),
                     'remember_token' => Str::random(60),
                 ])->save();
+
+                $user->increment('session_version');
+                $user->refresh();
+
+                $auditLogger->record('USER_PASSWORD_RESET', $user, $user, null, [
+                    'session_version' => (int) $user->session_version,
+                ]);
 
                 event(new PasswordReset($user));
             }

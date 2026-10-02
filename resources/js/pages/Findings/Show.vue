@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { Head, useForm, Link, usePage } from '@inertiajs/vue3'
 import AuthenticatedLayout from '../../layouts/AuthenticatedLayout.vue'
 import { formatDate, formatDateTime } from '../../utils/formatDate.js'
@@ -49,6 +49,14 @@ const resolutionEvidences = computed(() => {
 })
 
 const deleteForm = useForm({})
+const remediationCompletionForm = useForm({})
+const confirmation = ref(null)
+const confirmationDialog = ref(null)
+const confirmationButton = ref(null)
+const confirmationTrigger = ref(null)
+const confirmationForm = computed(() => confirmation.value?.type === 'delete'
+    ? deleteForm
+    : remediationCompletionForm)
 
 const responseForm = useForm({
     response: '',
@@ -79,6 +87,7 @@ const evidenceForm = useForm({
     description: '',
     file: null,
 })
+const resolutionEvidenceInput = ref(null)
 
 const closureReviewForm = useForm({ notes: '' })
 const closureRejectionForm = useForm({ notes: '' })
@@ -87,6 +96,21 @@ const actionError = ref('')
 const rejectionOpen = ref(false)
 const approvalOpen = ref(false)
 const closureRejectionOpen = ref(false)
+
+watch(confirmation, async (value) => {
+    if (value) {
+        confirmationTrigger.value = document.activeElement
+        await nextTick()
+        confirmationDialog.value?.showModal()
+        confirmationButton.value?.focus()
+
+        return
+    }
+
+    if (confirmationDialog.value?.open) {
+        confirmationDialog.value.close()
+    }
+})
 
 const activeAction = computed(() => {
     return props.finding.actions?.find(action => {
@@ -161,13 +185,12 @@ const riskClass = computed(() => {
 })
 
 const deleteFinding = () => {
-    if (!confirm('Are you sure you want to delete this finding?')) {
-        return
+    confirmation.value = {
+        type: 'delete',
+        title: 'Delete this finding?',
+        message: 'This removes the finding from the active register. This action cannot be undone.',
+        confirmLabel: 'Delete finding',
     }
-
-    deleteForm.delete(
-        route('findings.destroy', props.finding.id)
-    )
 }
 
 const submitResponse = () => {
@@ -268,16 +291,49 @@ const completeRemediation = () => {
         return
     }
 
-    if (!confirm('Mark this corrective action as completed?')) {
+    confirmation.value = {
+        type: 'complete-remediation',
+        actionId: activeAction.value.id,
+        title: 'Complete this remediation?',
+        message: 'The action will be marked complete and submitted for auditor verification.',
+        confirmLabel: 'Mark complete',
+    }
+}
+
+const dismissConfirmation = () => {
+    confirmation.value = null
+    nextTick(() => confirmationTrigger.value?.focus())
+}
+
+const submitConfirmation = () => {
+    if (!confirmation.value || confirmationForm.value.processing) {
         return
     }
 
-    useForm({}).post(
-        route('finding-actions.complete', activeAction.value.id),
-        {
-            preserveScroll: true,
-        }
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => {
+            confirmation.value = null
+        },
+    }
+
+    if (confirmation.value.type === 'delete') {
+        deleteForm.delete(route('findings.destroy', props.finding.id), options)
+
+        return
+    }
+
+    remediationCompletionForm.post(
+        route('finding-actions.complete', confirmation.value.actionId),
+        options
     )
+}
+
+const handleConfirmationClose = () => {
+    if (confirmation.value) {
+        confirmation.value = null
+        nextTick(() => confirmationTrigger.value?.focus())
+    }
 }
 
 const submitEvidence = () => {
@@ -316,6 +372,20 @@ const formatEvidenceSize = (size) => {
     return size < 1024 * 1024
         ? `${Math.ceil(size / 1024)} KB`
         : `${(size / (1024 * 1024)).toFixed(1)} MB`
+}
+
+const selectResolutionEvidence = (event) => {
+    evidenceForm.file = event.target.files?.[0] ?? null
+    evidenceForm.clearErrors('file')
+}
+
+const clearResolutionEvidence = () => {
+    evidenceForm.file = null
+    evidenceForm.clearErrors('file')
+
+    if (resolutionEvidenceInput.value) {
+        resolutionEvidenceInput.value.value = ''
+    }
 }
 
 </script>
@@ -818,12 +888,29 @@ const formatEvidenceSize = (size) => {
 
                         <div>
                             <label for="resolution-file" class="block text-sm font-medium text-gray-700">Resolution evidence</label>
-                            <input id="resolution-file" type="file" required
+                            <input id="resolution-file" ref="resolutionEvidenceInput" type="file" required
                                 accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.csv,.txt"
                                 class="mt-1 block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-gray-700 file:ring-1 file:ring-gray-300"
-                                @input="evidenceForm.file = $event.target.files[0]" />
+                                @change="selectResolutionEvidence" />
                             <p class="mt-1 text-xs text-gray-500">PDF, image, office document, CSV, or text file, up to 10 MB.</p>
+                            <div v-if="evidenceForm.file" class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded border border-gray-200 bg-white px-3 py-2">
+                                <p class="min-w-0 break-all text-xs text-gray-700">
+                                    {{ evidenceForm.file.name }} · {{ formatEvidenceSize(evidenceForm.file.size) }}
+                                </p>
+                                <button type="button" :disabled="evidenceForm.processing" class="text-xs font-semibold text-[#315d47] underline underline-offset-2 disabled:opacity-50" @click="clearResolutionEvidence">
+                                    Remove file
+                                </button>
+                            </div>
                             <p v-if="evidenceForm.errors.file" class="mt-1 text-xs text-red-600">{{ evidenceForm.errors.file }}</p>
+                            <div v-if="evidenceForm.progress" class="mt-3 space-y-1" role="status" aria-live="polite">
+                                <div class="flex justify-between text-xs text-gray-600">
+                                    <span>Uploading resolution evidence</span>
+                                    <span>{{ evidenceForm.progress.percentage }}%</span>
+                                </div>
+                                <progress class="h-2 w-full accent-[#315d47]" :value="evidenceForm.progress.percentage" max="100">
+                                    {{ evidenceForm.progress.percentage }}%
+                                </progress>
+                            </div>
                         </div>
 
                         <div>
@@ -986,6 +1073,29 @@ const formatEvidenceSize = (size) => {
                 </div>
             </section>
         </div>
+
+        <Teleport to="body">
+            <dialog ref="confirmationDialog" aria-labelledby="finding-confirmation-title" class="m-auto w-[calc(100%-2rem)] max-w-lg rounded-lg border border-gray-200 bg-white p-6 text-left shadow-xl backdrop:bg-[#102a24]/45" @close="handleConfirmationClose">
+                <div v-if="confirmation">
+                    <h2 id="finding-confirmation-title" class="text-lg font-semibold text-gray-900">
+                        {{ confirmation.title }}
+                    </h2>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">
+                        {{ confirmation.message }}
+                    </p>
+                    <div class="mt-6 flex justify-end gap-2">
+                        <button type="button" :disabled="confirmationForm.processing" @click="dismissConfirmation"
+                            class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 disabled:opacity-50">
+                            Cancel
+                        </button>
+                        <button ref="confirmationButton" type="button" :disabled="confirmationForm.processing" @click="submitConfirmation"
+                            class="rounded-md border border-red-700 bg-red-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+                            {{ confirmationForm.processing ? 'Working...' : confirmation.confirmLabel }}
+                        </button>
+                    </div>
+                </div>
+            </dialog>
+        </Teleport>
 
         <!-- Approval Modal -->
         <Teleport to="body">

@@ -38,7 +38,10 @@ class AuditLogController extends Controller
             ->through(static fn (AuditLog $log): array => [
                 'id' => $log->id,
                 'action' => $log->action,
-                'user' => $log->user?->only(['name', 'email']),
+                'user' => [
+                    'name' => $log->actor_name ?? $log->user?->name,
+                    'email' => $log->actor_email ?? $log->user?->email,
+                ],
                 'target' => [
                     'type' => class_basename($log->auditable_type),
                     'id' => $log->auditable_id,

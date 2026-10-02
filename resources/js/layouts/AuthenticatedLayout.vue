@@ -3,6 +3,22 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 
 const page = usePage()
+const validationErrors = computed(() => Object.entries(page.props.errors ?? {}).flatMap(([field, value]) => {
+    const messages = Array.isArray(value) ? value : [value]
+
+    return messages.map(message => ({
+        field: field.replaceAll('.', ' ').replaceAll('_', ' '),
+        message: String(message),
+    }))
+}))
+const validationSummary = ref(null)
+
+watch(validationErrors, async (errors) => {
+    if (errors.length) {
+        await nextTick()
+        validationSummary.value?.focus()
+    }
+})
 
 const user = computed(() => page.props.auth?.user)
 
@@ -73,8 +89,8 @@ const navigationItems = computed(() => {
 
     if (can('audit-log.view')) {
         items.push({
-            label: 'Audit logs',
-            detail: 'Review immutable change history',
+            label: 'Change history',
+            detail: 'Review recorded changes',
             href: route('audit-logs.index'),
             keywords: 'audit logs journal governance events',
         })
@@ -389,7 +405,7 @@ watch(searchQuery, () => {
                     <p class="app-nav-label mb-2 px-3 text-[10px] font-semibold tracking-[0.16em]">GOVERNANCE</p>
                     <Link :href="route('audit-logs.index')" class="app-nav-link group" :class="{ 'is-active': route().current('audit-logs.*') }" @click="mobileNavOpen = false">
                         <span class="app-nav-mark">05</span>
-                        <span>Audit logs</span>
+                        <span>Change history</span>
                     </Link>
                 </div>
 
@@ -530,6 +546,23 @@ watch(searchQuery, () => {
             </header>
 
             <main class="app-main min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10 xl:px-12">
+                <div v-if="page.props.flash?.success" class="mb-5 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status" aria-live="polite" aria-atomic="true">
+                    {{ page.props.flash.success }}
+                </div>
+
+                <div v-if="page.props.flash?.error" class="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert" aria-live="assertive" aria-atomic="true">
+                    {{ page.props.flash.error }}
+                </div>
+
+                <section v-if="validationErrors.length" ref="validationSummary" class="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-4 text-red-900" role="alert" aria-live="assertive" aria-atomic="true" tabindex="-1">
+                    <h2 class="text-sm font-semibold">Please review the following details</h2>
+                    <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+                        <li v-for="(error, index) in validationErrors" :key="`${error.field}-${index}`">
+                            <span class="capitalize">{{ error.field }}:</span> {{ error.message }}
+                        </li>
+                    </ul>
+                </section>
+
                 <slot />
             </main>
         </div>

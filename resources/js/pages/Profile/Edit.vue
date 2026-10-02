@@ -7,6 +7,10 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    sessionPolicy: {
+        type: Object,
+        required: true,
+    },
 })
 
 const form = useForm({
@@ -16,6 +20,7 @@ const form = useForm({
         live_notification_alerts: props.profile.preferences?.live_notification_alerts ?? true,
     },
 })
+const revokeSessionsForm = useForm({})
 
 const timezones = [
     'UTC',
@@ -32,6 +37,7 @@ const timezones = [
 ]
 
 const submit = () => form.put(route('profile.update'), { preserveScroll: true })
+const revokeOtherSessions = () => revokeSessionsForm.post(route('profile.sessions.revoke-others'), { preserveScroll: true })
 </script>
 
 <template>
@@ -64,6 +70,21 @@ const submit = () => form.put(route('profile.update'), { preserveScroll: true })
                         <span>Email address</span>
                         <input id="profile-email" :value="profile.email" type="email" autocomplete="email" disabled />
                     </label>
+                </section>
+
+                <section class="profile-settings-section" aria-labelledby="session-security-heading">
+                    <div>
+                        <h3 id="session-security-heading" class="text-sm font-semibold text-[#17231e]">Signed-in sessions</h3>
+                        <p class="mt-1 text-xs leading-5 text-gray-500">
+                            Sessions end after {{ sessionPolicy.idleTimeoutMinutes }} minutes without activity or {{ Math.round(sessionPolicy.absoluteTimeoutMinutes / 60) }} hours, whichever comes first. Closing the browser or stopping a local server does not sign you out.
+                        </p>
+                    </div>
+                    <div>
+                        <button type="button" class="profile-save-button" :disabled="revokeSessionsForm.processing" @click="revokeOtherSessions">
+                            {{ revokeSessionsForm.processing ? 'Revoking sessions...' : 'Sign out other sessions' }}
+                        </button>
+                        <p class="mt-2 text-xs text-gray-500">This keeps your current session active and requires other devices to sign in again.</p>
+                    </div>
                 </section>
 
                 <section class="profile-settings-section" aria-labelledby="preferences-heading">
